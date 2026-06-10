@@ -49,9 +49,21 @@ def recognize():
         response = requests.post(GEMINI_URL, json=payload, timeout=15)
         result = response.json()
 
+        # Hata kontrolü
+        if "error" in result:
+            return jsonify({"error": result["error"]}), 500
+
+        if "candidates" not in result or len(result["candidates"]) == 0:
+            return jsonify({"recognized": False})
+
         text = result["candidates"][0]["content"]["parts"][0]["text"]
         text = text.strip().replace("```json", "").replace("```", "").strip()
-        parsed = json.loads(text)
+        
+        try:
+            parsed = json.loads(text)
+        except:
+            # JSON parse edilemezse tanıyamadı say
+            return jsonify({"recognized": False})
 
         return jsonify(parsed)
 
